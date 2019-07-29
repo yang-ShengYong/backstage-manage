@@ -1,13 +1,16 @@
 <template>
   <div class="class">
-    初始化页面
+    <HeadNav></HeadNav>
   </div>
 </template>
 
 <script>
+import HeadNav from '../components/headNav'
 export default {
   name: 'index',
-  components: {}
+  components: {
+    HeadNav
+  }
 }
 </script>
 
