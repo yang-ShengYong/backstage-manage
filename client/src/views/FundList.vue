@@ -9,13 +9,7 @@
     </div>
 
     <div class="table_container">
-      <el-table
-        v-if="tableData.length > 0"
-        :data="tableData"
-        max-height="450"
-
-        style="width: 100%"
-      >
+      <el-table v-if="tableData.length > 0" :data="tableData" max-height="900" style="width: 100%">
         <el-table-column type="index" label="序号" fixed align="center" width="70"></el-table-column>
         <el-table-column prop="date" label="创建时间" align="center" width="260">
           <template slot-scope="scope">
@@ -41,7 +35,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="remark" label="备注" align="center" width="350"></el-table-column>
-        <el-table-column label="操作" prop="operation" fixed="right" align="center" min-width="250">
+        <el-table-column label="操作" prop="operation" fixed="right" align="center" min-width="200">
           <template slot-scope="scope">
             <el-button
               type="warning"
@@ -59,6 +53,22 @@
         </el-table-column>
       </el-table>
     </div>
+    <!-- 分页 -->
+    <el-row>
+      <el-col :span="24">
+        <div class="pagination">
+          <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page.sync="paginations.page_index"
+            :page-sizes="paginations.page_sizes"
+            :page-size="paginations.page_size"
+            :layout="paginations.layout"
+            :total="paginations.total"
+          ></el-pagination>
+        </div>
+      </el-col>
+    </el-row>
     <Dialog :dialog="dialog" :formData="formData" @update="getProfile"></Dialog>
   </div>
 </template>
@@ -69,11 +79,19 @@ export default {
   name: "fundlist",
   data() {
     return {
+      paginations: {
+        page_index: 1,
+        total: 0,
+        page_size: 5,
+        page_sizes: [5,10,15,20],
+        layout: 'total,sizes,prev,pager,next,jumper'
+      },
       tableData: [],
+      allTableData: [],
       dialog: {
         show: false,
-        title: '',
-        option: 'edit'
+        title: "",
+        option: "edit"
       },
       formData: {
         type: "",
@@ -95,16 +113,27 @@ export default {
       this.$axios
         .get("/api/profiles")
         .then(res => {
-          this.tableData = res.data;
+          this.allTableData = res.data;
+          //设置分页数据
+          this.setPaginations()
         })
         .catch(err => console.log(err));
+    },
+    setPaginations () {
+      this.paginations.total = this.allTableData.length
+      this.paginations.page_index = 1
+      this.paginations.page_size = 5
+      //设置默认数据
+      this.tableData = this.allTableData.filter((item, index) => {
+        return index < this.paginations.page_size
+      })
     },
     handleEdit(index, row) {
       this.dialog = {
         show: true,
-        title: '修改资金信息',
-        option: 'edit'
-      }
+        title: "修改资金信息",
+        option: "edit"
+      };
       this.formData = {
         type: row.type,
         describe: row.describe,
@@ -113,30 +142,52 @@ export default {
         cash: row.cash,
         remark: row.remark,
         id: row._id
-      }
+      };
     },
     handleDelete(index, row) {
-      this.$axios.delete(`/api/profiles/delete/${row._id}`)
-      .then(res => {
-        this.$message('删除成功')
-        this.getProfile()
-      })
+      this.$axios.delete(`/api/profiles/delete/${row._id}`).then(res => {
+        this.$message("删除成功");
+        this.getProfile();
+      });
     },
     handleAdd() {
       this.dialog = {
         show: true,
-        title: '添加资金信息',
-        option: 'add'
-      }
+        title: "添加资金信息",
+        option: "add"
+      };
       this.formData = {
-        type: '',
-        describe: '',
-        income: '',
-        expend: '',
-        cash: '',
-        remark: '',
-        id: ''
+        type: "",
+        describe: "",
+        income: "",
+        expend: "",
+        cash: "",
+        remark: "",
+        id: ""
+      };
+    },
+    handleSizeChange (page_size) {
+      this.paginations.page_index = 1
+      this.paginations.page_size = page_size
+
+      this.tableData = this.allTableData.filter((item, index) => {
+        return index < page_size
+      })
+    },
+    handleCurrentChange (page) {
+      //获取当前页
+      let index = this.paginations.page_size * (page - 1)
+      //数据总数
+      let nums = this.paginations.page_size * page
+      //容器
+      let tables = []
+
+      for (let i = index; i < nums; i++) {
+        if (this.allTableData[i]) {
+          tables.push(this.allTableData[i])
+        }
       }
+      this.tableData = tables
     }
   },
   components: {
