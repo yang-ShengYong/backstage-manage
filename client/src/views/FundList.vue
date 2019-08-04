@@ -1,9 +1,24 @@
 <template>
   <div class="fillContainer">
     <div>
-      <el-form :inline="true" ref="add_data">
+      <el-form :inline="true" ref="add_data" :model="search_data">
+        <!-- 筛选 -->
+        <el-form-item label="按时间筛选">
+          <el-date-picker v-model="search_data.startTime" type="datetime" placeholder="选择开始时间"></el-date-picker>
+          --
+          <el-date-picker v-model="search_data.endTime" type="datetime" placeholder="选择结束时间"></el-date-picker>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" size="small" icon="search" @click="handleSearch()">筛选</el-button>
+        </el-form-item>
         <el-form-item class="btnRight">
-          <el-button type="primary" size="small" @click="handleAdd()">添加</el-button>
+          <el-button
+            type="primary"
+            size="small"
+            icon="view"
+            v-if="user.identity == 'manager'"
+            @click="handleAdd()"
+            >添加</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -35,7 +50,9 @@
           </template>
         </el-table-column>
         <el-table-column prop="remark" label="备注" align="center" width="350"></el-table-column>
-        <el-table-column label="操作" prop="operation" fixed="right" align="center" min-width="200">
+        <el-table-column label="操作" prop="operation" fixed="right" align="center" min-width="200"
+        v-if="user.identity == 'manager'"
+        >
           <template slot-scope="scope">
             <el-button
               type="warning"
@@ -79,12 +96,17 @@ export default {
   name: "fundlist",
   data() {
     return {
+      search_data: {
+        startTime: '',
+        endTime: ''
+      },
+      filterTableData: [],
       paginations: {
         page_index: 1,
         total: 0,
         page_size: 5,
-        page_sizes: [5,10,15,20],
-        layout: 'total,sizes,prev,pager,next,jumper'
+        page_sizes: [5, 10, 15, 20],
+        layout: "total,sizes,prev,pager,next,jumper"
       },
       tableData: [],
       allTableData: [],
@@ -104,6 +126,11 @@ export default {
       }
     };
   },
+  computed: {
+    user () {
+      return this.$store.getters.user
+    }
+  },
   created() {
     this.getProfile();
   },
@@ -113,20 +140,21 @@ export default {
       this.$axios
         .get("/api/profiles")
         .then(res => {
-          this.allTableData = res.data;
+          this.allTableData = res.data
+          this.filterTableData = res.data
           //设置分页数据
           this.setPaginations()
         })
-        .catch(err => console.log(err));
+        .catch(err => console.log(err))
     },
-    setPaginations () {
-      this.paginations.total = this.allTableData.length
-      this.paginations.page_index = 1
-      this.paginations.page_size = 5
+    setPaginations() {
+      this.paginations.total = this.allTableData.length;
+      this.paginations.page_index = 1;
+      this.paginations.page_size = 5;
       //设置默认数据
       this.tableData = this.allTableData.filter((item, index) => {
-        return index < this.paginations.page_size
-      })
+        return index < this.paginations.page_size;
+      });
     },
     handleEdit(index, row) {
       this.dialog = {
@@ -166,28 +194,48 @@ export default {
         id: ""
       };
     },
-    handleSizeChange (page_size) {
-      this.paginations.page_index = 1
-      this.paginations.page_size = page_size
+    handleSizeChange(page_size) {
+      this.paginations.page_index = 1;
+      this.paginations.page_size = page_size;
 
       this.tableData = this.allTableData.filter((item, index) => {
-        return index < page_size
-      })
+        return index < page_size;
+      });
     },
-    handleCurrentChange (page) {
+    handleCurrentChange(page) {
       //获取当前页
-      let index = this.paginations.page_size * (page - 1)
+      let index = this.paginations.page_size * (page - 1);
       //数据总数
-      let nums = this.paginations.page_size * page
+      let nums = this.paginations.page_size * page;
       //容器
-      let tables = []
+      let tables = [];
 
       for (let i = index; i < nums; i++) {
         if (this.allTableData[i]) {
-          tables.push(this.allTableData[i])
+          tables.push(this.allTableData[i]);
         }
       }
-      this.tableData = tables
+      this.tableData = tables;
+    },
+    handleSearch () {
+      if (!this.search_data.startTime || !this.search_data.endTime) {
+        this.$message({
+          type: 'warning',
+          message: '请选择时间区间'
+        })
+        this.getProfile()
+        return
+      }
+
+      const sTime = this.search_data.startTime
+      const eTime = this.search_data.endTime
+
+      this.allTableData = this.filterTableData.filter(item => {
+        let date = new Date(item.date)
+        let time = date.getTime()
+        return time >= sTime && time <= eTime
+      })
+      this.setPaginations()
     }
   },
   components: {
