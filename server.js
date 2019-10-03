@@ -28,9 +28,6 @@ require('./config/passport')(passport)
 app.use('/api/users', users)
 app.use('/api/profiles', profiles)
 
-
-
-
 // app.get("/", (req, res) => {
 //   res.send("hello")
 // })

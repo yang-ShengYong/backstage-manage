@@ -72,8 +72,7 @@ export default {
           this.$axios
           .post('/api/users/login', this.loginUser)
           .then(res => {
-            console.log(res)
-            console.log(1)
+            
             //token
             const { token } = res.data
             //存到本地缓存

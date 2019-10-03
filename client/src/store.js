@@ -30,13 +30,13 @@ const mutations = {
 }
 
 const actions = {
-  setAuthenticated: ({commit}, isAuthenticated) => {
+  setAuthenticated: ({ commit }, isAuthenticated) => {
     commit(types.SET_AUTHENTICATED, isAuthenticated)
   },
-  setUser: ({commit}, user) => {
+  setUser: ({ commit }, user) => {
     commit(types.SET_USER, user)
   },
-  clearCurrentState: ({commit}) => {
+  clearCurrentState: ({ commit }) => {
     commit(types.SET_AUTHENTICATED, false)
     commit(types.SET_USER, null)
   }

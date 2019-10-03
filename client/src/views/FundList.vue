@@ -104,7 +104,7 @@ export default {
       paginations: {
         page_index: 1,
         total: 0,
-        page_size: 5,
+        page_size: 10,
         page_sizes: [5, 10, 15, 20],
         layout: "total,sizes,prev,pager,next,jumper"
       },
@@ -150,7 +150,7 @@ export default {
     setPaginations() {
       this.paginations.total = this.allTableData.length;
       this.paginations.page_index = 1;
-      this.paginations.page_size = 5;
+      this.paginations.page_size = 10;
       //设置默认数据
       this.tableData = this.allTableData.filter((item, index) => {
         return index < this.paginations.page_size;
